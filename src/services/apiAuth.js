@@ -1,12 +1,17 @@
 import supabase, { supabaseUrl } from "./supabase";
 
-export async function signup({ fullName, email, password }) {
+/**
+ * Crea un nuevo usuario con rol asignado (usado por Admin)
+ * El rol se almacena en user_metadata para lectura rápida en cliente.
+ */
+export async function createUser({ fullName, email, password, rol }) {
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
             data: {
                 fullName,
+                rol,   // "admin" | "pesador" | "digitador"
                 avatar: "",
             },
         },
@@ -15,6 +20,11 @@ export async function signup({ fullName, email, password }) {
     if (error) throw new Error(error.message);
 
     return data;
+}
+
+/** @deprecated - Usar createUser con rol explícito */
+export async function signup({ fullName, email, password }) {
+    return createUser({ fullName, email, password, rol: "digitador" });
 }
 
 export async function login({ email, password }) {
@@ -31,6 +41,9 @@ export async function login({ email, password }) {
 export async function getCurrentUser() {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) return null;
+
+    // Forzar refresh del token para obtener user_metadata actualizado desde la BD
+    await supabase.auth.refreshSession();
 
     const { data, error } = await supabase.auth.getUser();
 
