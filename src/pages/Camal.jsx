@@ -110,6 +110,25 @@ const Input = styled.input`
     font-size: 1.6rem;
     font-weight: 600;
     height: 4rem;
+
+    /* FIX iOS: evita el zoom automático al hacer foco en el input */
+    @media (max-width: 768px) {
+        font-size: 16px;
+    }
+`;
+
+const StyledSelect = styled.select`
+    padding: 0.8rem 1.2rem;
+    border: 1px solid var(--color-grey-300);
+    border-radius: var(--border-radius-sm);
+    background: var(--color-grey-0);
+    font-size: 1.4rem;
+    height: 4rem;
+
+    /* FIX iOS zoom */
+    @media (max-width: 768px) {
+        font-size: 16px;
+    }
 `;
 
 const NetoBox = styled.div`
@@ -161,12 +180,13 @@ function Camal() {
     const pesaTina = Number(settings?.peso_tina_kg ?? 3);
 
     const { register, handleSubmit, watch, reset } = useForm({
-        defaultValues: { peso_bruto: "", cant_tinas: 0, cant_pollos: "" }
+        // cant_tinas vacío por defecto — se lee como 0 si no se llena
+        defaultValues: { peso_bruto: "", cant_tinas: "", cant_pollos: "" }
     });
 
     const pesoNeto = Math.max(
         0,
-        Number(watch("peso_bruto") ?? 0) - Number(watch("cant_tinas") ?? 0) * pesaTina
+        Number(watch("peso_bruto") || 0) - Number(watch("cant_tinas") || 0) * pesaTina
     );
 
     function onSubmit(data) {
@@ -226,7 +246,7 @@ function Camal() {
                     <FormGrid>
                         <FieldBox>
                             <Label>Cliente *</Label>
-                            <Select
+                            <StyledSelect
                                 {...register("client_id", { required: true })}
                                 disabled={loadingClients}
                             >
@@ -234,13 +254,17 @@ function Camal() {
                                 {clients.map((c) => (
                                     <option key={c.id} value={c.id}>{c.nombre}</option>
                                 ))}
-                            </Select>
+                            </StyledSelect>
                         </FieldBox>
 
                         <FieldBox>
                             <Label>Cantidad de Pollos</Label>
                             <Input
-                                type="number" min="0" placeholder="0"
+                                type="number"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                min="0"
+                                placeholder="0"
                                 {...register("cant_pollos")}
                             />
                         </FieldBox>
@@ -256,7 +280,12 @@ function Camal() {
                         <FieldBox>
                             <Label>Peso Bruto (kg) *</Label>
                             <Input
-                                type="number" step="0.01" min="0" placeholder="0.00"
+                                type="number"
+                                inputMode="decimal"
+                                pattern="[0-9.]*"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
                                 {...register("peso_bruto", { required: true, min: 0.01 })}
                             />
                         </FieldBox>
@@ -264,10 +293,14 @@ function Camal() {
                         <FieldBox>
                             <Label>Cantidad de Tinas</Label>
                             <Input
-                                type="number" min="0" placeholder="0"
+                                type="number"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                min="0"
+                                placeholder="0"
                                 {...register("cant_tinas", { min: 0 })}
                             />
-                            <Hint>Peso por tina configurado: {pesaTina} kg</Hint>
+                            <Hint>Peso por tina: {pesaTina} kg. Si no usas tinas, deja vacío.</Hint>
                         </FieldBox>
 
                         {/* Display Peso Neto */}

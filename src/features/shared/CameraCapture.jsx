@@ -3,29 +3,82 @@ import styled from "styled-components";
 import { HiCamera, HiArrowPath, HiCheckCircle } from "react-icons/hi2";
 import Button from "../../ui/Button";
 
+// ── Wrapper general ────────────────────────────────────────────────────────
 const CameraWrapper = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.2rem;
+    gap: 1rem;
     width: 100%;
+`;
+
+// ── Contenedor relativo — video + botón superpuesto ────────────────────────
+const VideoContainer = styled.div`
+    position: relative;
+    width: 100%;
+    max-width: 380px;
 `;
 
 const VideoElement = styled.video`
     width: 100%;
-    max-width: 420px;
+    /* Altura reducida para que el botón sea visible sin scroll */
+    max-height: 240px;
+    object-fit: cover;
     border-radius: var(--border-radius-md);
     border: 2px solid var(--color-brand-500);
     background: #000;
     display: block;
 `;
 
+/* Botón de captura flotando SOBRE el video, en la parte inferior */
+const FloatingBtn = styled.button`
+    position: absolute;
+    bottom: 1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+
+    background: var(--color-brand-600);
+    color: white;
+    border: 3px solid white;
+    border-radius: 100px;
+    padding: 1rem 2.4rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    white-space: nowrap;
+    transition: background 0.2s;
+
+    &:hover, &:active { background: var(--color-brand-700); }
+
+    & svg { width: 2rem; height: 2rem; }
+`;
+
+const CancelBtn = styled.button`
+    background: none;
+    border: 1px solid var(--color-grey-300);
+    border-radius: var(--border-radius-sm);
+    padding: 0.6rem 1.4rem;
+    font-size: 1.3rem;
+    color: var(--color-grey-600);
+    cursor: pointer;
+    margin-top: 0.2rem;
+    &:hover { background: var(--color-grey-50); }
+`;
+
+// ── Preview de foto tomada ─────────────────────────────────────────────────
 const PreviewImg = styled.img`
     width: 100%;
-    max-width: 420px;
+    max-width: 380px;
+    max-height: 240px;
+    object-fit: cover;
     border-radius: var(--border-radius-md);
     border: 2px solid var(--color-green-700);
-    object-fit: cover;
     display: block;
 `;
 
@@ -37,19 +90,12 @@ const StatusBadge = styled.div`
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 600;
     color: ${(p) => (p.$ok ? "var(--color-green-700)" : "var(--color-grey-500)")};
-    padding: 0.6rem 1.2rem;
+    padding: 0.5rem 1.2rem;
     background: ${(p) => (p.$ok ? "var(--color-green-100)" : "var(--color-grey-100)")};
     border-radius: var(--border-radius-sm);
-`;
-
-const ButtonRow = styled.div`
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
 `;
 
 const ErrorMsg = styled.p`
@@ -59,66 +105,47 @@ const ErrorMsg = styled.p`
     padding: 0.8rem 1.2rem;
     border-radius: var(--border-radius-sm);
     text-align: center;
-    max-width: 420px;
+    max-width: 380px;
 `;
 
-/**
- * CameraCapture — captura foto con la cámara del dispositivo.
- *
- * FIX pantalla negra: se usa useEffect para asignar srcObject DESPUÉS de que
- * React haya montado el elemento <video> en el DOM, y se llama .play()
- * explícitamente en onLoadedMetadata para garantizar que el stream arranque.
- *
- * @param {Function} onCapture — recibe el Blob de la foto capturada
- */
+// ── Componente ─────────────────────────────────────────────────────────────
 function CameraCapture({ onCapture }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const streamRef = useRef(null);
 
-    const [mode, setMode] = useState("idle"); // "idle" | "streaming" | "preview"
+    const [mode, setMode] = useState("idle");
     const [previewUrl, setPreviewUrl] = useState(null);
     const [camError, setCamError] = useState(null);
 
-    // ── KEY FIX: asignar stream al video DESPUÉS de que React monte el <video> ──
+    // FIX pantalla negra: asignar srcObject DESPUÉS del render de React
     useEffect(() => {
         if (mode === "streaming" && videoRef.current && streamRef.current) {
             videoRef.current.srcObject = streamRef.current;
-            // .play() asíncrono — ignoramos AbortError (usuario cancela rápido)
             videoRef.current.play().catch(() => { });
         }
     }, [mode]);
 
-    // ── Limpiar stream al desmontar el componente ──────────────────────────
+    // Limpiar stream al desmontar
     useEffect(() => {
         return () => {
-            if (streamRef.current) {
+            if (streamRef.current)
                 streamRef.current.getTracks().forEach((t) => t.stop());
-            }
         };
     }, []);
 
     const startCamera = useCallback(async () => {
         setCamError(null);
         try {
-            // Intentar cámara trasera (Android/iOS), con fallback automático
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: { ideal: "environment" },
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                },
+                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false,
             });
             streamRef.current = stream;
-            setMode("streaming"); // el useEffect de arriba asignará srcObject
+            setMode("streaming");
         } catch {
             try {
-                // Fallback: cualquier cámara disponible
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: false,
-                });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
                 streamRef.current = stream;
                 setMode("streaming");
             } catch (err) {
@@ -136,42 +163,29 @@ function CameraCapture({ onCapture }) {
             streamRef.current.getTracks().forEach((t) => t.stop());
             streamRef.current = null;
         }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
+        if (videoRef.current) videoRef.current.srcObject = null;
         setMode("idle");
     }, []);
 
     const takePhoto = useCallback(() => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        if (!video || !canvas) return;
-
-        // Verificar que el video ya tiene dimensiones reales
-        if (!video.videoWidth || !video.videoHeight) {
-            alert("La cámara aún no está lista, espera un momento.");
-            return;
-        }
+        if (!video || !canvas || !video.videoWidth) return;
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext("2d").drawImage(video, 0, 0);
 
-        canvas.toBlob(
-            (blob) => {
-                const url = URL.createObjectURL(blob);
-                setPreviewUrl(url);
-                setMode("preview");
-                onCapture?.(blob);
-                // Liberar cámara tras capturar
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach((t) => t.stop());
-                    streamRef.current = null;
-                }
-            },
-            "image/jpeg",
-            0.88
-        );
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            setPreviewUrl(url);
+            setMode("preview");
+            onCapture?.(blob);
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach((t) => t.stop());
+                streamRef.current = null;
+            }
+        }, "image/jpeg", 0.88);
     }, [onCapture]);
 
     const retake = useCallback(() => {
@@ -185,7 +199,7 @@ function CameraCapture({ onCapture }) {
         <CameraWrapper>
             <HiddenCanvas ref={canvasRef} />
 
-            {/* ── Botón inicial ── */}
+            {/* ── Idle: botón de activar ── */}
             {mode === "idle" && (
                 <>
                     <Button type="button" variation="secondary" size="large" onClick={startCamera}>
@@ -196,35 +210,34 @@ function CameraCapture({ onCapture }) {
                 </>
             )}
 
-            {/* ── Vista de cámara en vivo ── */}
+            {/* ── Streaming: video compacto + botón flotante sobre él ── */}
             {mode === "streaming" && (
                 <>
-                    <VideoElement
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        onLoadedMetadata={(e) => e.target.play().catch(() => { })}
-                    />
-                    <ButtonRow>
-                        <Button type="button" variation="primary" size="large" onClick={takePhoto}>
-                            <HiCamera /> &nbsp; Tomar Foto
-                        </Button>
-                        <Button type="button" variation="secondary" onClick={stopCamera}>
-                            Cancelar
-                        </Button>
-                    </ButtonRow>
+                    <VideoContainer>
+                        <VideoElement
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            onLoadedMetadata={(e) => e.target.play().catch(() => { })}
+                        />
+                        {/* Botón de captura flotante: visible sin scroll */}
+                        <FloatingBtn type="button" onClick={takePhoto}>
+                            <HiCamera /> Tomar foto
+                        </FloatingBtn>
+                    </VideoContainer>
+                    <CancelBtn type="button" onClick={stopCamera}>Cancelar</CancelBtn>
                 </>
             )}
 
-            {/* ── Preview de foto tomada ── */}
+            {/* ── Preview ── */}
             {mode === "preview" && (
                 <>
                     <PreviewImg src={previewUrl} alt="Foto de balanza capturada" />
                     <StatusBadge $ok>
-                        <HiCheckCircle size={20} /> Foto capturada correctamente
+                        <HiCheckCircle size={18} /> Foto capturada correctamente
                     </StatusBadge>
-                    <Button type="button" variation="secondary" onClick={retake}>
+                    <Button type="button" variation="secondary" size="small" onClick={retake}>
                         <HiArrowPath /> &nbsp; Retomar foto
                     </Button>
                 </>
