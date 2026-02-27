@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import Row from "../ui/Row";
 
 import { useRecords } from "../hooks/useRecords";
 import { useClients } from "../hooks/useClients";
@@ -44,11 +45,14 @@ const Tab = styled.button`
 `;
 
 const Card = styled.div`
-    background: var(--color-grey-0);
+    background-color: var(--color-grey-0);
+    border: 1px solid var(--color-grey-100);
     border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-md);
-    padding: 2.4rem;
-    margin-bottom: 2rem;
+    padding: 2.4rem 4rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
 `;
 
 const FilterRow = styled.div`
@@ -351,7 +355,7 @@ function Reportes() {
     const [activeTab, setActiveTab] = useState("apertura");
 
     return (
-        <PageWrapper>
+        <Row type="vertical">
             <Heading as="h1">Reportes</Heading>
             <Tabs>
                 <Tab $active={activeTab === "apertura"} onClick={() => setActiveTab("apertura")}>
@@ -363,7 +367,7 @@ function Reportes() {
             </Tabs>
             {activeTab === "apertura" && <AperturaTab />}
             {activeTab === "reportes" && <ReportesTab />}
-        </PageWrapper>
+        </Row>
     );
 }
 

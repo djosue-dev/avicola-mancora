@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { format, parse, isBefore, addMinutes } from "date-fns";
-import { HiPlus, HiTrash, HiCheckCircle, HiClock } from "react-icons/hi2";
+import { HiPlus, HiTrash, HiCheckCircle } from "react-icons/hi2";
 import { useForm } from "react-hook-form";
 
 import { useOrders, useCreateOrder, useDeleteOrder, useUpdateOrderStatus } from "../hooks/useOrders";
@@ -9,155 +9,141 @@ import { useClients } from "../hooks/useClients";
 import Button from "../ui/Button";
 import Spinner from "../ui/Spinner";
 import Heading from "../ui/Heading";
+import Row from "../ui/Row";
+import Tag from "../ui/Tag";
+import Table from "../ui/Table";
 
 // ─── Animación parpadeo rojo ───────────────────────────────────────────────
 const blink = keyframes`
     0%, 100% { opacity: 1; }
-    50%       { opacity: 0.4; }
+    50%       { opacity: 0.2; }
 `;
 
 // ─── Styled Components ─────────────────────────────────────────────────────
-const PageWrapper = styled.div`
+const Stacked = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 2.4rem;
-    padding: 1.6rem;
-    max-width: 900px;
-    margin: 0 auto;
+    gap: 0.2rem;
+
+    & span:first-child { font-weight: 500; }
+    & span:last-child  { color: var(--color-grey-500); font-size: 1.2rem; }
 `;
 
-const HeaderRow = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1.2rem;
+const TagBlink = styled.span`
+    animation: ${(p) => (p.$blink ? blink : "none")} 1.5s ease-in-out infinite;
+    display: inline-block;
 `;
 
-const Grid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(28rem, 1fr));
-    gap: 1.6rem;
-`;
-
-const Card = styled.div`
-    border-radius: var(--border-radius-md);
-    padding: 2rem;
-    background: var(--color-grey-0);
-    box-shadow: var(--shadow-md);
-    border-left: 6px solid ${(p) =>
-        p.$status === "rojo" ? "#dc2626" :
-            p.$status === "amarillo" ? "#d97706" :
-                "#16a34a"};
-    animation: ${(p) => (p.$status === "rojo" ? blink : "none")} 1.5s ease-in-out infinite;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-`;
-
-const ClientName = styled.p`
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--color-grey-800);
-`;
-
-const MetaRow = styled.div`
+const Actions = styled.div`
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    font-size: 1.4rem;
-    color: var(--color-grey-600);
-`;
-
-const Badge = styled.span`
-    padding: 0.3rem 1rem;
-    border-radius: 9999px;
-    font-size: 1.2rem;
-    font-weight: 600;
-    background: ${(p) =>
-        p.$status === "rojo" ? "var(--color-red-100)" :
-            p.$status === "amarillo" ? "var(--color-yellow-100)" :
-                "var(--color-green-100)"};
-    color: ${(p) =>
-        p.$status === "rojo" ? "var(--color-red-700)" :
-            p.$status === "amarillo" ? "var(--color-yellow-700)" :
-                "var(--color-green-700)"};
-`;
-
-const CardActions = styled.div`
-    display: flex;
-    gap: 0.8rem;
-    margin-top: 0.4rem;
 `;
 
 const FormBox = styled.div`
-    background: var(--color-grey-0);
+    background-color: var(--color-grey-0);
+    border: 1px solid var(--color-grey-100);
     border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-md);
-    padding: 2.4rem;
-`;
-
-const FormTitle = styled.h3`
-    font-size: 1.8rem;
-    font-weight: 600;
-    margin-bottom: 1.6rem;
-    color: var(--color-grey-700);
+    padding: 2.4rem 4rem;
+    overflow: hidden;
 `;
 
 const FormGrid = styled.div`
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.4rem;
+    grid-template-columns: 24rem 16rem 16rem auto;
+    gap: 2rem;
+    align-items: end;
 
-    @media (max-width: 600px) {
-        grid-template-columns: 1fr;
-    }
+    @media (max-width: 900px) { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 500px) { grid-template-columns: 1fr; }
+`;
+
+const FieldBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
 `;
 
 const Label = styled.label`
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 500;
-    color: var(--color-grey-600);
-    display: block;
-    margin-bottom: 0.4rem;
+    color: var(--color-grey-700);
 `;
 
 const Select = styled.select`
-    width: 100%;
-    padding: 1rem 1.2rem;
+    padding: 0.8rem 1.2rem;
     border: 1px solid var(--color-grey-300);
     border-radius: var(--border-radius-sm);
     background: var(--color-grey-0);
-    font-size: 1.5rem;
-    min-height: 4.4rem;
+    font-size: 1.4rem;
+    height: 3.8rem;
 `;
 
-const StyledInput = styled.input`
-    width: 100%;
-    padding: 1rem 1.2rem;
+const Input = styled.input`
+    padding: 0.8rem 1.2rem;
     border: 1px solid var(--color-grey-300);
     border-radius: var(--border-radius-sm);
     background: var(--color-grey-0);
-    font-size: 1.5rem;
-    min-height: 4.4rem;
+    font-size: 1.4rem;
+    height: 3.8rem;
 `;
 
-const EmptyMsg = styled.p`
-    text-align: center;
-    color: var(--color-grey-400);
-    font-size: 1.5rem;
-    padding: 3rem;
-`;
-
-// ─── Lógica de color de alerta ─────────────────────────────────────────────
-function getOrderStatus(horaLimiteStr, tieneDespachos) {
+// ─── Lógica de semáforo ────────────────────────────────────────────────────
+function getStatus(horaLimiteStr, completado) {
+    if (completado) return "verde";
     const now = new Date();
     const limite = parse(horaLimiteStr, "HH:mm:ss", now);
-    const margen = addMinutes(now, 30);
-
-    if (!isBefore(now, limite) && !tieneDespachos) return "rojo";
-    if (!isBefore(margen, limite)) return "amarillo";
+    if (!isBefore(now, limite)) return "rojo";
+    if (!isBefore(addMinutes(now, 30), limite)) return "amarillo";
     return "verde";
+}
+
+const STATUS_TAG = { verde: "green", amarillo: "yellow", rojo: "red" };
+const STATUS_TEXT = { verde: "A tiempo", amarillo: "Próximo", rojo: "Vencido" };
+
+// ─── Fila de pedido ────────────────────────────────────────────────────────
+function OrderRow({ order, onComplete, onDelete }) {
+    const status = getStatus(order.hora_limite, order.estado === "completado");
+    const tagType = STATUS_TAG[status];
+    const isRojo = status === "rojo";
+
+    return (
+        <Table.Row>
+            <Stacked>
+                <span>{order.clients?.nombre}</span>
+                <span>{order.clients?.zones?.nombre ?? "—"}</span>
+            </Stacked>
+
+            <div style={{ fontFamily: "monospace", fontWeight: 600 }}>
+                {order.hora_limite?.slice(0, 5)}
+            </div>
+
+            <div>
+                <strong>{order.cantidad_solicitada}</strong> pollos
+            </div>
+
+            <div>
+                <TagBlink $blink={isRojo}>
+                    <Tag type={tagType}>{STATUS_TEXT[status]}</Tag>
+                </TagBlink>
+            </div>
+
+            <Actions>
+                {order.estado === "pendiente" && (
+                    <Button
+                        size="small"
+                        variation="secondary"
+                        onClick={() => onComplete(order.id)}
+                    >
+                        <HiCheckCircle /> Completar
+                    </Button>
+                )}
+                <Button size="small" variation="danger" onClick={() => onDelete(order.id)}>
+                    <HiTrash />
+                </Button>
+            </Actions>
+        </Table.Row>
+    );
 }
 
 // ─── Componente Principal ──────────────────────────────────────────────────
@@ -171,38 +157,39 @@ function Pizarra() {
     const { removeOrder } = useDeleteOrder();
     const { changeStatus } = useUpdateOrderStatus();
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset } = useForm();
 
-    function onSubmit(formData) {
+    function onSubmit(data) {
         addOrder({
-            client_id: formData.client_id,
+            client_id: data.client_id,
             fecha: today,
-            hora_limite: formData.hora_limite,
-            cantidad_solicitada: Number(formData.cantidad_solicitada),
+            hora_limite: data.hora_limite,
+            cantidad_solicitada: Number(data.cantidad_solicitada),
         }, { onSuccess: () => { reset(); setShowForm(false); } });
     }
 
     if (isLoading) return <Spinner />;
 
     return (
-        <PageWrapper>
-            <HeaderRow>
+        <Row type="vertical">
+            {/* ── Cabecera ─────────────────────────────── */}
+            <Row type="horizontal">
                 <Heading as="h1">Pizarra de Pedidos</Heading>
                 <Button
-                    size="large"
-                    onClick={() => setShowForm((v) => !v)}
+                    size="medium"
                     variation={showForm ? "secondary" : "primary"}
+                    onClick={() => setShowForm((v) => !v)}
                 >
                     {showForm ? "Cancelar" : <><HiPlus /> Nuevo Pedido</>}
                 </Button>
-            </HeaderRow>
+            </Row>
 
+            {/* ── Formulario nuevo pedido ───────────────── */}
             {showForm && (
                 <FormBox>
-                    <FormTitle>Registrar Pedido</FormTitle>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <FormGrid>
-                            <div>
+                            <FieldBox>
                                 <Label>Cliente *</Label>
                                 <Select {...register("client_id", { required: true })} disabled={loadingClients}>
                                     <option value="">Seleccionar cliente...</option>
@@ -210,87 +197,52 @@ function Pizarra() {
                                         <option key={c.id} value={c.id}>{c.nombre}</option>
                                     ))}
                                 </Select>
-                                {errors.client_id && <p style={{ color: "red", fontSize: "1.2rem" }}>Requerido</p>}
-                            </div>
+                            </FieldBox>
 
-                            <div>
-                                <Label>Hora Límite *</Label>
-                                <StyledInput
-                                    type="time"
-                                    {...register("hora_limite", { required: true })}
-                                />
-                                {errors.hora_limite && <p style={{ color: "red", fontSize: "1.2rem" }}>Requerido</p>}
-                            </div>
+                            <FieldBox>
+                                <Label>Hora límite *</Label>
+                                <Input type="time" {...register("hora_limite", { required: true })} />
+                            </FieldBox>
 
-                            <div>
-                                <Label>Cantidad Solicitada (pollos)</Label>
-                                <StyledInput
-                                    type="number"
-                                    min="1"
-                                    placeholder="Ej: 100"
+                            <FieldBox>
+                                <Label>Cantidad (pollos)</Label>
+                                <Input
+                                    type="number" min="1" placeholder="0"
                                     {...register("cantidad_solicitada", { required: true, min: 1 })}
                                 />
-                            </div>
-                        </FormGrid>
+                            </FieldBox>
 
-                        <div style={{ marginTop: "2rem" }}>
-                            <Button type="submit" size="large" disabled={adding}>
-                                {adding ? "Guardando..." : "Registrar Pedido"}
+                            <Button type="submit" size="medium" disabled={adding}>
+                                {adding ? "Guardando..." : "Registrar"}
                             </Button>
-                        </div>
+                        </FormGrid>
                     </form>
                 </FormBox>
             )}
 
-            <Grid>
-                {orders.length === 0 && (
-                    <EmptyMsg>No hay pedidos registrados para hoy.</EmptyMsg>
-                )}
-                {orders.map((order) => {
-                    const status = getOrderStatus(
-                        order.hora_limite,
-                        order.estado === "completado"
-                    );
-                    const labelMap = { verde: "A tiempo", amarillo: "Próximo a vencer", rojo: "¡VENCIDO!" };
-                    return (
-                        <Card key={order.id} $status={status}>
-                            <ClientName>{order.clients?.nombre}</ClientName>
-                            <MetaRow>
-                                <HiClock size={16} />
-                                Hora límite: <strong>{order.hora_limite?.slice(0, 5)}</strong>
-                            </MetaRow>
-                            <MetaRow>
-                                Zona: {order.clients?.zones?.nombre ?? "—"}
-                            </MetaRow>
-                            <MetaRow>
-                                Cantidad: <strong>{order.cantidad_solicitada} pollos</strong>
-                            </MetaRow>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
-                                <Badge $status={status}>{labelMap[status]}</Badge>
-                            </div>
-                            <CardActions>
-                                {order.estado === "pendiente" && (
-                                    <Button
-                                        size="small"
-                                        variation="secondary"
-                                        onClick={() => changeStatus({ id: order.id, estado: "completado" })}
-                                    >
-                                        <HiCheckCircle /> Completar
-                                    </Button>
-                                )}
-                                <Button
-                                    size="small"
-                                    variation="danger"
-                                    onClick={() => removeOrder(order.id)}
-                                >
-                                    <HiTrash />
-                                </Button>
-                            </CardActions>
-                        </Card>
-                    );
-                })}
-            </Grid>
-        </PageWrapper>
+            {/* ── Tabla de pedidos ──────────────────────── */}
+            <Table columns="2fr 1fr 1fr 1.2fr auto">
+                <Table.Header>
+                    <div>Cliente / Zona</div>
+                    <div>Hora Límite</div>
+                    <div>Cantidad</div>
+                    <div>Estado</div>
+                    <div></div>
+                </Table.Header>
+
+                <Table.Body
+                    data={orders}
+                    render={(order) => (
+                        <OrderRow
+                            key={order.id}
+                            order={order}
+                            onComplete={(id) => changeStatus({ id, estado: "completado" })}
+                            onDelete={(id) => removeOrder(id)}
+                        />
+                    )}
+                />
+            </Table>
+        </Row>
     );
 }
 

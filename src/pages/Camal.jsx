@@ -12,119 +12,139 @@ import CameraCapture from "../features/shared/CameraCapture";
 import Spinner from "../ui/Spinner";
 import Heading from "../ui/Heading";
 import Button from "../ui/Button";
+import Row from "../ui/Row";
+import Tag from "../ui/Tag";
 
-// ─── Styled Components ─────────────────────────────────────────────────────
-const PageWrapper = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    padding: 1.6rem;
-    max-width: 600px;
-    margin: 0 auto;
-`;
-
+// ─── Zona Selector ─────────────────────────────────────────────────────────
 const ZonaGrid = styled.div`
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 1.6rem;
 `;
 
 const ZonaBtn = styled.button`
-    padding: 2rem 1.6rem;
+    padding: 2.4rem 2rem;
     border-radius: var(--border-radius-md);
-    border: 2px solid var(--color-brand-500);
+    border: 1px solid var(--color-grey-200);
     background: var(--color-grey-0);
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--color-brand-600);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--color-grey-700);
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
+    align-items: flex-start;
+    gap: 0.6rem;
     box-shadow: var(--shadow-sm);
+    text-align: left;
 
     &:first-child {
-        background: var(--color-brand-500);
-        color: white;
+        background: var(--color-brand-600);
+        color: var(--color-brand-50);
         border-color: var(--color-brand-700);
         box-shadow: var(--shadow-md);
-        transform: scale(1.02);
     }
 
     &:hover {
-        background: var(--color-brand-600);
-        color: white;
+        background-color: var(--color-brand-600);
+        color: var(--color-brand-50);
+        border-color: var(--color-brand-700);
+        box-shadow: var(--shadow-md);
     }
 `;
 
-const PriorityBadge = styled.span`
+const PriorityTag = styled.span`
     font-size: 1.1rem;
     font-weight: 400;
-    opacity: 0.8;
+    opacity: 0.75;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 `;
 
+// ─── Formulario de Pesaje ──────────────────────────────────────────────────
 const FormCard = styled.div`
-    background: var(--color-grey-0);
+    background-color: var(--color-grey-0);
+    border: 1px solid var(--color-grey-100);
     border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-md);
-    padding: 2.4rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.6rem;
+    padding: 2.4rem 4rem;
+    overflow: hidden;
 `;
 
-const FieldGroup = styled.div`
+const FormGrid = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem 3.2rem;
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+const FieldBox = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.8rem;
 `;
 
 const Label = styled.label`
     font-size: 1.4rem;
-    font-weight: 600;
-    color: var(--color-grey-600);
+    font-weight: 500;
+    color: var(--color-grey-700);
 `;
 
-const StyledSelect = styled.select`
-    padding: 1.2rem;
+const Select = styled.select`
+    padding: 0.8rem 1.2rem;
     border: 1px solid var(--color-grey-300);
     border-radius: var(--border-radius-sm);
+    background: var(--color-grey-0);
+    font-size: 1.4rem;
+    height: 4rem;
+`;
+
+const Input = styled.input`
+    padding: 0.8rem 1.2rem;
+    border: 1px solid var(--color-grey-300);
+    border-radius: var(--border-radius-sm);
+    background: var(--color-grey-0);
     font-size: 1.6rem;
-    background: var(--color-grey-0);
-    min-height: 4.8rem;
-`;
-
-const StyledInput = styled.input`
-    padding: 1.2rem;
-    border: 1px solid var(--color-grey-300);
-    border-radius: var(--border-radius-sm);
-    font-size: 1.8rem;
-    background: var(--color-grey-0);
-    min-height: 4.8rem;
     font-weight: 600;
+    height: 4rem;
 `;
 
-const NetoDisplay = styled.div`
+const NetoBox = styled.div`
+    grid-column: 1 / -1;
     background: var(--color-brand-50);
-    border: 2px solid var(--color-brand-500);
+    border: 1px solid var(--color-brand-200);
     border-radius: var(--border-radius-md);
-    padding: 1.6rem;
-    text-align: center;
-
-    p { font-size: 1.3rem; color: var(--color-brand-700); font-weight: 600; margin-bottom: 0.4rem; }
-    span {
-        font-size: 3.2rem;
-        font-weight: 800;
-        color: var(--color-brand-600);
-    }
-`;
-
-const BackRow = styled.div`
+    padding: 1.6rem 2.4rem;
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    justify-content: space-between;
+    gap: 2rem;
+`;
+
+const NetoLabel = styled.span`
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--color-brand-700);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+`;
+
+const NetoValue = styled.span`
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--color-brand-600);
+`;
+
+const Hint = styled.small`
+    font-size: 1.2rem;
+    color: var(--color-grey-400);
+`;
+
+const FullRow = styled.div`
+    grid-column: 1 / -1;
 `;
 
 // ─── Componente Principal ──────────────────────────────────────────────────
@@ -140,20 +160,20 @@ function Camal() {
 
     const pesaTina = Number(settings?.peso_tina_kg ?? 3);
 
-    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, reset } = useForm({
         defaultValues: { peso_bruto: "", cant_tinas: 0, cant_pollos: "" }
     });
 
-    const pesoBruto = Number(watch("peso_bruto") ?? 0);
-    const cantTinas = Number(watch("cant_tinas") ?? 0);
-    const pesoNeto = Math.max(0, pesoBruto - cantTinas * pesaTina);
+    const pesoNeto = Math.max(
+        0,
+        Number(watch("peso_bruto") ?? 0) - Number(watch("cant_tinas") ?? 0) * pesaTina
+    );
 
     function onSubmit(data) {
         if (!fotoBlob) {
             alert("Debes tomar una foto de la balanza antes de guardar.");
             return;
         }
-
         saveRecord({
             tipo_registro: "camal",
             user_id: user?.id,
@@ -165,125 +185,116 @@ function Camal() {
             peso_neto: pesoNeto,
             fotoFile: fotoBlob,
         }, {
-            onSuccess: () => {
-                reset();
-                setFotoBlob(null);
-                setSelectedZone(null);
-            }
+            onSuccess: () => { reset(); setFotoBlob(null); setSelectedZone(null); }
         });
     }
 
     if (loadingZones) return <Spinner />;
 
-    // ── PANTALLA 1: Selector de Zona ──
+    // ── Pantalla 1: Selector de Zona ─────────
     if (!selectedZone) {
         return (
-            <PageWrapper>
+            <Row type="vertical">
                 <Heading as="h1">Camal — Seleccionar Zona</Heading>
                 <p style={{ fontSize: "1.4rem", color: "var(--color-grey-500)" }}>
-                    Las zonas están ordenadas por prioridad de despacho (mayor prioridad primero).
+                    La zona resaltada tiene mayor prioridad de despacho.
                 </p>
                 <ZonaGrid>
                     {zones.map((z) => (
                         <ZonaBtn key={z.id} onClick={() => setSelectedZone(z)}>
                             {z.nombre}
-                            <PriorityBadge>Prioridad #{z.prioridad}</PriorityBadge>
+                            <PriorityTag>Prioridad #{z.prioridad}</PriorityTag>
                         </ZonaBtn>
                     ))}
                 </ZonaGrid>
-            </PageWrapper>
+            </Row>
         );
     }
 
-    // ── PANTALLA 2: Formulario de Pesaje ──
+    // ── Pantalla 2: Formulario de Pesaje ─────
     return (
-        <PageWrapper>
-            <BackRow>
-                <Button variation="secondary" size="small" onClick={() => setSelectedZone(null)}>
-                    <HiArrowLeft /> Cambiar Zona
-                </Button>
+        <Row type="vertical">
+            <Row type="horizontal">
                 <Heading as="h1">Camal — {selectedZone.nombre}</Heading>
-            </BackRow>
+                <Button variation="secondary" size="small" onClick={() => setSelectedZone(null)}>
+                    <HiArrowLeft /> Cambiar zona
+                </Button>
+            </Row>
 
             <FormCard>
                 <form onSubmit={handleSubmit(onSubmit)}>
+                    <FormGrid>
+                        <FieldBox>
+                            <Label>Cliente *</Label>
+                            <Select
+                                {...register("client_id", { required: true })}
+                                disabled={loadingClients}
+                            >
+                                <option value="">Seleccionar cliente...</option>
+                                {clients.map((c) => (
+                                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                                ))}
+                            </Select>
+                        </FieldBox>
 
-                    <FieldGroup style={{ marginBottom: "1.2rem" }}>
-                        <Label>Cliente *</Label>
-                        <StyledSelect
-                            {...register("client_id", { required: "Selecciona un cliente" })}
-                            disabled={loadingClients}
-                        >
-                            <option value="">Seleccionar cliente...</option>
-                            {clients.map((c) => (
-                                <option key={c.id} value={c.id}>{c.nombre}</option>
-                            ))}
-                        </StyledSelect>
-                        {errors.client_id && <p style={{ color: "red", fontSize: "1.2rem" }}>{errors.client_id.message}</p>}
-                    </FieldGroup>
+                        <FieldBox>
+                            <Label>Cantidad de Pollos</Label>
+                            <Input
+                                type="number" min="0" placeholder="0"
+                                {...register("cant_pollos")}
+                            />
+                        </FieldBox>
 
-                    {/* CÁMARA */}
-                    <FieldGroup style={{ marginBottom: "1.2rem" }}>
-                        <Label>Foto de Balanza * (obligatoria)</Label>
-                        <CameraCapture onCapture={setFotoBlob} />
-                    </FieldGroup>
+                        {/* Cámara — ocupa todo el ancho */}
+                        <FullRow>
+                            <Label style={{ display: "block", marginBottom: "0.8rem" }}>
+                                Foto de Balanza * (obligatoria)
+                            </Label>
+                            <CameraCapture onCapture={setFotoBlob} />
+                        </FullRow>
 
-                    <FieldGroup style={{ marginBottom: "1.2rem" }}>
-                        <Label>Peso Bruto (kg) *</Label>
-                        <StyledInput
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            {...register("peso_bruto", { required: true, min: 0.01 })}
-                        />
-                    </FieldGroup>
+                        <FieldBox>
+                            <Label>Peso Bruto (kg) *</Label>
+                            <Input
+                                type="number" step="0.01" min="0" placeholder="0.00"
+                                {...register("peso_bruto", { required: true, min: 0.01 })}
+                            />
+                        </FieldBox>
 
-                    <FieldGroup style={{ marginBottom: "1.2rem" }}>
-                        <Label>Cantidad de Tinas</Label>
-                        <StyledInput
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            {...register("cant_tinas", { min: 0 })}
-                        />
-                        <small style={{ color: "var(--color-grey-400)", fontSize: "1.2rem" }}>
-                            Peso por tina configurado: {pesaTina} kg
-                        </small>
-                    </FieldGroup>
+                        <FieldBox>
+                            <Label>Cantidad de Tinas</Label>
+                            <Input
+                                type="number" min="0" placeholder="0"
+                                {...register("cant_tinas", { min: 0 })}
+                            />
+                            <Hint>Peso por tina configurado: {pesaTina} kg</Hint>
+                        </FieldBox>
 
-                    <FieldGroup style={{ marginBottom: "1.6rem" }}>
-                        <Label>Cantidad de Pollos</Label>
-                        <StyledInput
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            {...register("cant_pollos")}
-                        />
-                    </FieldGroup>
+                        {/* Display Peso Neto */}
+                        <NetoBox>
+                            <NetoLabel>Peso Neto Calculado</NetoLabel>
+                            <NetoValue>{pesoNeto.toFixed(2)} kg</NetoValue>
+                        </NetoBox>
 
-                    {/* PESO NETO EN TIEMPO REAL */}
-                    <NetoDisplay style={{ marginBottom: "2rem" }}>
-                        <p>PESO NETO CALCULADO</p>
-                        <span>{pesoNeto.toFixed(2)} kg</span>
-                    </NetoDisplay>
-
-                    <Button
-                        type="submit"
-                        size="large"
-                        style={{ width: "100%" }}
-                        disabled={saving || !fotoBlob}
-                    >
-                        {saving ? "Guardando..." : "Guardar Registro"}
-                    </Button>
-                    {!fotoBlob && (
-                        <p style={{ textAlign: "center", color: "var(--color-red-700)", fontSize: "1.3rem", marginTop: "0.8rem" }}>
-                            ⚠ Toma la foto de la balanza para habilitar el guardado
-                        </p>
-                    )}
+                        <FullRow>
+                            <Button
+                                type="submit"
+                                size="large"
+                                style={{ width: "100%" }}
+                                disabled={saving || !fotoBlob}
+                            >
+                                {saving ? "Guardando..." : "Guardar Registro"}
+                            </Button>
+                            {!fotoBlob && (
+                                <p style={{ textAlign: "center", color: "var(--color-red-700)", fontSize: "1.3rem", marginTop: "0.8rem" }}>
+                                    ⚠ Toma la foto de la balanza para habilitar el guardado
+                                </p>
+                            )}
+                        </FullRow>
+                    </FormGrid>
                 </form>
             </FormCard>
-        </PageWrapper>
+        </Row>
     );
 }
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import { useForm } from "react-hook-form";
 import { HiPencil, HiTrash, HiPlus } from "react-icons/hi2";
+import Row from "../ui/Row";
 
 import {
     useZones, useCreateZone, useUpdateZone, useDeleteZone
@@ -25,11 +26,6 @@ const ROLES = [
 ];
 
 // ─── Styled Components ─────────────────────────────────────────────────────
-const PageWrapper = styled.div`
-    padding: 1.6rem;
-    max-width: 900px;
-    margin: 0 auto;
-`;
 
 const Tabs = styled.div`
     display: flex;
@@ -54,11 +50,14 @@ const Tab = styled.button`
 `;
 
 const SectionCard = styled.div`
-    background: var(--color-grey-0);
+    background-color: var(--color-grey-0);
+    border: 1px solid var(--color-grey-100);
     border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-md);
-    padding: 2.4rem;
-    margin-bottom: 2rem;
+    padding: 2.4rem 4rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
 `;
 
 const TableWrapper = styled.div`
@@ -357,6 +356,7 @@ function UsuariosTab() {
 }
 
 // ─── Página Principal ──────────────────────────────────────────────────────
+
 const TABS = [
     { id: "zonas", label: "Zonas" },
     { id: "clientes", label: "Clientes" },
@@ -368,7 +368,7 @@ function Configuracion() {
     const [activeTab, setActiveTab] = useState("zonas");
 
     return (
-        <PageWrapper>
+        <Row type="vertical">
             <Heading as="h1">Configuración</Heading>
 
             <Tabs>
@@ -383,7 +383,7 @@ function Configuracion() {
             {activeTab === "clientes" && <ClientesTab />}
             {activeTab === "ajustes" && <AjustesTab />}
             {activeTab === "usuarios" && <UsuariosTab />}
-        </PageWrapper>
+        </Row>
     );
 }
 

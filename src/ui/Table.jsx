@@ -1,17 +1,13 @@
 import { createContext, useContext } from "react";
 import styled from "styled-components";
 
-// Wrapper que le da scroll horizontal en móvil sin romper el diseño desktop
-const TableWrapper = styled.div`
+const StyledTable = styled.div`
   border: 1px solid var(--color-grey-200);
-  border-radius: 7px;
-  background-color: var(--color-grey-0);
-  overflow: hidden;
 
-  @media (max-width: 768px) {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  font-size: 1.4rem;
+  background-color: var(--color-grey-0);
+  border-radius: 7px;
+  overflow: hidden;
 `;
 
 const CommonRow = styled.div`
@@ -20,27 +16,17 @@ const CommonRow = styled.div`
   column-gap: 2.4rem;
   align-items: center;
   transition: none;
-
-  @media (max-width: 768px) {
-    column-gap: 1.2rem;
-    /* Tamaño mínimo para que el scroll funcione correctamente */
-    min-width: max-content;
-  }
 `;
 
 const StyledHeader = styled(CommonRow)`
   padding: 1.6rem 2.4rem;
+
   background-color: var(--color-grey-50);
   border-bottom: 1px solid var(--color-grey-100);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   font-weight: 600;
   color: var(--color-grey-600);
-
-  @media (max-width: 768px) {
-    padding: 1.2rem 1.6rem;
-    font-size: 1.2rem;
-  }
 `;
 
 const StyledRow = styled(CommonRow)`
@@ -48,10 +34,6 @@ const StyledRow = styled(CommonRow)`
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--color-grey-100);
-  }
-
-  @media (max-width: 768px) {
-    padding: 1rem 1.6rem;
   }
 `;
 
@@ -82,7 +64,7 @@ const TableContext = createContext();
 function Table({ columns, children }) {
   return (
     <TableContext.Provider value={{ columns }}>
-      <TableWrapper role="table">{children}</TableWrapper>
+      <StyledTable role="table">{children}</StyledTable>
     </TableContext.Provider>
   );
 }
