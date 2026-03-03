@@ -12,17 +12,23 @@ const CameraWrapper = styled.div`
     width: 100%;
 `;
 
-// ── Contenedor relativo — video + botón superpuesto ────────────────────────
+/* Contenedor con proporciones portrait — se adapta al ancho disponible */
 const VideoContainer = styled.div`
     position: relative;
     width: 100%;
-    max-width: 380px;
+    /* Ancho máximo razonable en portrait */
+    max-width: 300px;
+    /* Proporción 9:16 vertical */
+    aspect-ratio: 9 / 16;
+    /* En móviles pequeños limitamos el alto para que quepa sin scroll */
+    @media (max-height: 700px) {
+        max-width: 200px;
+    }
 `;
 
 const VideoElement = styled.video`
     width: 100%;
-    /* Altura reducida para que el botón sea visible sin scroll */
-    max-height: 240px;
+    height: 100%;
     object-fit: cover;
     border-radius: var(--border-radius-md);
     border: 2px solid var(--color-brand-500);
@@ -137,8 +143,13 @@ function CameraCapture({ onCapture }) {
     const startCamera = useCallback(async () => {
         setCamError(null);
         try {
+            // Constraints portrait: height > width para que el stream sea vertical
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+                video: {
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 720 },
+                    height: { ideal: 1280 },
+                },
                 audio: false,
             });
             streamRef.current = stream;
