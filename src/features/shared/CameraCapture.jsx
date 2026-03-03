@@ -15,14 +15,14 @@ const CameraWrapper = styled.div`
 /* Contenedor con proporciones portrait — se adapta al ancho disponible */
 const VideoContainer = styled.div`
     position: relative;
-    width: 100%;
-    /* Ancho máximo razonable en portrait */
-    max-width: 300px;
-    /* Proporción 9:16 vertical */
+    /* Limitamos el alto máximo al 45% del viewport visible.
+       El ancho se calcula automáticamente desde el aspect-ratio para
+       que siempre sea portrait y quepa sin scroll. */
+    max-height: 45dvh;
     aspect-ratio: 9 / 16;
-    /* En móviles pequeños limitamos el alto para que quepa sin scroll */
-    @media (max-height: 700px) {
-        max-width: 200px;
+    /* altura de fallback para navegadores sin dvh */
+    @supports not (max-height: 45dvh) {
+        max-width: 220px;
     }
 `;
 
@@ -183,29 +183,31 @@ function CameraCapture({ onCapture }) {
         const canvas = canvasRef.current;
         if (!video || !canvas || !video.videoWidth) return;
 
-        const vw = video.videoWidth;
+        const vw = video.videoWidth;   // dimensiones nativas del frame del sensor
         const vh = video.videoHeight;
 
-        // Si el frame viene en landscape (sensor físico) pero el contenedor
-        // se muestra en portrait, rotamos el canvas 90° para que la foto
-        // salga vertical.
-        const needsRotation = vw > vh;
+        // Dimensiones del recuadro visible del <video> en pantalla (portrait por CSS)
+        const { width: dispW, height: dispH } = video.getBoundingClientRect();
 
-        if (needsRotation) {
-            // Canvas en portrait: intercambiamos ancho y alto
-            canvas.width = vh;
-            canvas.height = vw;
-            const ctx = canvas.getContext("2d");
-            // Mover origen al centro, rotar -90°, dibujar
-            ctx.translate(vh / 2, vw / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.drawImage(video, -vw / 2, -vh / 2);
-        } else {
-            // Ya viene en portrait — dibujamos directo
-            canvas.width = vw;
-            canvas.height = vh;
-            canvas.getContext("2d").drawImage(video, 0, 0);
-        }
+        // Replicar object-fit: cover:
+        // El factor de escala que hace que el frame nativo cubra el recuadro visible
+        const scale = Math.max(dispW / vw, dispH / vh);
+
+        // Región del frame nativo que se muestra (crop centrado)
+        const cropW = dispW / scale;
+        const cropH = dispH / scale;
+        const cropX = (vw - cropW) / 2;
+        const cropY = (vh - cropH) / 2;
+
+        // Canvas con las proporciones del recuadro visible (portrait), x2 resolución
+        canvas.width = Math.round(cropW * 2);
+        canvas.height = Math.round(cropH * 2);
+
+        canvas.getContext("2d").drawImage(
+            video,
+            cropX, cropY, cropW, cropH,
+            0, 0, canvas.width, canvas.height
+        );
 
         canvas.toBlob((blob) => {
             const url = URL.createObjectURL(blob);
@@ -218,6 +220,7 @@ function CameraCapture({ onCapture }) {
             }
         }, "image/jpeg", 0.88);
     }, [onCapture]);
+
 
     const retake = useCallback(() => {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
