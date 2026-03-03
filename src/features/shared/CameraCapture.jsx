@@ -183,9 +183,29 @@ function CameraCapture({ onCapture }) {
         const canvas = canvasRef.current;
         if (!video || !canvas || !video.videoWidth) return;
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext("2d").drawImage(video, 0, 0);
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+
+        // Si el frame viene en landscape (sensor físico) pero el contenedor
+        // se muestra en portrait, rotamos el canvas 90° para que la foto
+        // salga vertical.
+        const needsRotation = vw > vh;
+
+        if (needsRotation) {
+            // Canvas en portrait: intercambiamos ancho y alto
+            canvas.width = vh;
+            canvas.height = vw;
+            const ctx = canvas.getContext("2d");
+            // Mover origen al centro, rotar -90°, dibujar
+            ctx.translate(vh / 2, vw / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.drawImage(video, -vw / 2, -vh / 2);
+        } else {
+            // Ya viene en portrait — dibujamos directo
+            canvas.width = vw;
+            canvas.height = vh;
+            canvas.getContext("2d").drawImage(video, 0, 0);
+        }
 
         canvas.toBlob((blob) => {
             const url = URL.createObjectURL(blob);
