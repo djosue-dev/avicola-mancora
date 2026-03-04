@@ -79,10 +79,10 @@ const CancelBtn = styled.button`
 
 // ── Preview de foto tomada ─────────────────────────────────────────────────
 const PreviewImg = styled.img`
-    width: 100%;
-    max-width: 380px;
-    max-height: 240px;
-    object-fit: cover;
+    /* Mismas proporciones que el VideoContainer para mostrar la foto completa */
+    max-height: 45dvh;
+    aspect-ratio: 9 / 16;
+    object-fit: contain;
     border-radius: var(--border-radius-md);
     border: 2px solid var(--color-green-700);
     display: block;
